@@ -1,0 +1,24 @@
+name: Deploy Markdown Editor
+
+on:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: projects/tools/markdown-editor
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run test
+
+  # Cloudflare Pages: connect openlearnia/markdown-editor, root directory = projects/tools/markdown-editor,
+  # build command = bun run build, output = dist. Custom domain option: markdown.openlearnia.com

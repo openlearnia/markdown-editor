@@ -1,0 +1,30 @@
+.prose-preview h1,
+.prose-preview h2,
+.prose-preview h3 {
+  color: var(--color-text);
+}
+
+.prose-preview a {
+  color: var(--color-accent);
+}
+
+.prose-preview blockquote {
+  border-left-color: var(--color-accent);
+  color: var(--color-muted);
+}
+
+.prose-preview code:not(pre code) {
+  background: var(--color-surface-raised);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.prose-preview table {
+  display: block;
+  overflow-x: auto;
+}
+
+.prose-preview hr {
+  border-color: var(--color-border);
+}

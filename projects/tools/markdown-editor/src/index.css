@@ -1,0 +1,109 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-bg: #0f1117;
+  --color-surface: #1a1d27;
+  --color-surface-raised: #222633;
+  --color-border: #2a2f3a;
+  --color-text: #e8eaed;
+  --color-muted: #9aa0a6;
+  --color-accent: #6ea8fe;
+  --color-accent-dim: #4a7fd4;
+  --color-danger: #f28b82;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+[data-panel] {
+  overflow: hidden;
+}
+
+[data-panel] > * {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+[data-group] {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+[data-separator] {
+  flex: 0 0 6px;
+  width: 6px;
+  background: var(--color-border);
+  cursor: col-resize;
+  z-index: 2;
+  transition: background 150ms ease;
+  touch-action: none;
+}
+
+[data-separator]:hover,
+[data-separator='active'],
+[data-separator='focus'] {
+  background: var(--color-accent);
+}
+
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
+}
+
+.cm-scroller {
+  overflow: auto;
+}
+
+.prose-preview {
+  font-family: var(--font-sans);
+}
+
+.prose-preview pre {
+  font-family: var(--font-mono);
+}
+
+.prose-preview pre code.hljs {
+  background: var(--color-surface-raised);
+  border-radius: 8px;
+  padding: 1rem;
+  display: block;
+  overflow-x: auto;
+}
