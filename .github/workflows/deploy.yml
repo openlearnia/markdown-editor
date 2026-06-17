@@ -1,11 +1,15 @@
 name: Deploy Markdown Editor
 
+# Required GitHub org secrets: CF_API_TOKEN, CF_ACCOUNT_ID
+# Pages project name is set in wrangler.toml at repo root.
+
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,6 +19,9 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run build
       - run: bun run test
-
-  # Cloudflare Pages: connect openlearnia/markdown-editor, root directory = .,
-  # build command = bun run build, output = dist. Custom domain option: markdown.openlearnia.com
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: pages deploy --commit-dirty=true
