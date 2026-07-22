@@ -116,6 +116,10 @@ export function AppShell() {
       </div>
 
       <StatusBar />
+      <footer className="flex h-6 shrink-0 items-center justify-between gap-3 border-t border-border bg-surface px-4 text-[10px] text-muted">
+        <span>© Openlearnia</span>
+        <span className="truncate">Runs locally — nothing leaves your device</span>
+      </footer>
       <CommandPalette />
       <ShortcutsOverlay />
     </div>

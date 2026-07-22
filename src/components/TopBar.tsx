@@ -18,6 +18,23 @@ export function TopBar() {
       <div className="flex items-center gap-2">
         <span className="inline-block h-2.5 w-2.5 rounded-full bg-accent" aria-hidden />
         <span className="font-semibold tracking-tight">Openlearnia Markdown</span>
+        <a
+          href="https://openlearnia.com"
+          className="text-xs text-muted hover:text-accent"
+        >
+          Openlearnia
+        </a>
+        <a
+          href="https://github.com/openlearnia/markdown-editor"
+          className="text-xs text-muted hover:text-accent"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </a>
+        <span className="hidden md:inline-flex rounded-full border border-border px-2 py-0.5 text-[10px] text-muted">
+          Runs locally — nothing leaves your device
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <button
