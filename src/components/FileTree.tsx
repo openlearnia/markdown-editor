@@ -67,7 +67,7 @@ function TreeNodeRow({ node, depth }: { node: TreeNode; depth: number }) {
       <div
         className={`group relative flex items-center rounded-md text-sm transition ${
           menuOpen ? 'z-10' : ''
-        } ${isActive ? 'bg-accent/15 text-accent' : 'text-text hover:bg-surface-raised'}`}
+        } ${isActive ? 'border-l-2 border-accent bg-accent/25 text-accent' : 'border-l-2 border-transparent text-text hover:bg-surface-raised'}`}
       >
         <div
           className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pr-7"
@@ -176,7 +176,25 @@ function TreeNodeRow({ node, depth }: { node: TreeNode; depth: number }) {
 export function FileTree({ nodes, depth = 0 }: FileTreeProps) {
   const createFile = useWorkspace((s) => s.createFile)
   const createFolder = useWorkspace((s) => s.createFolder)
+  const importFiles = useWorkspace((s) => s.importFiles)
   const files = flattenFiles(nodes)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
+
+  const handleImport = async (selectedFiles: FileList | File[]) => {
+    try {
+      const importedPaths = await importFiles(Array.from(selectedFiles))
+      setImportMessage(
+        importedPaths.length > 0
+          ? `Imported ${importedPaths.length} Markdown ${importedPaths.length === 1 ? 'file' : 'files'}`
+          : 'No Markdown files found',
+      )
+    } catch {
+      setImportMessage('Could not import files')
+    }
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -201,11 +219,73 @@ export function FileTree({ nodes, depth = 0 }: FileTreeProps) {
               <path d="M2 4a1 1 0 0 1 1-1h3.5l1 1H13a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" />
             </svg>
           </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded p-1 text-muted hover:bg-surface-raised hover:text-accent"
+            title="Import Markdown files"
+            aria-label="Import Markdown files"
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            onClick={() => folderInputRef.current?.click()}
+            className="rounded p-1 text-muted hover:bg-surface-raised hover:text-accent"
+            title="Import a Markdown folder"
+            aria-label="Import a Markdown folder"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+              <path d="M2 4a1 1 0 0 1 1-1h3.5l1 1H13a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" />
+              <path d="M8 6v4M6 8h4" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+          </button>
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-2">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".md,text/markdown"
+        multiple
+        className="sr-only"
+        onChange={(event) => {
+          if (event.currentTarget.files) void handleImport(event.currentTarget.files)
+          event.currentTarget.value = ''
+        }}
+      />
+      <input
+        ref={(element) => {
+          folderInputRef.current = element
+          element?.setAttribute('webkitdirectory', '')
+        }}
+        type="file"
+        accept=".md,text/markdown"
+        multiple
+        className="sr-only"
+        onChange={(event) => {
+          if (event.currentTarget.files) void handleImport(event.currentTarget.files)
+          event.currentTarget.value = ''
+        }}
+      />
+      <div
+        className={`flex-1 overflow-auto p-2 ${isDragging ? 'bg-accent/10 ring-1 ring-inset ring-accent' : ''}`}
+        onDragEnter={(event) => {
+          event.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragOver={(event) => event.preventDefault()}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false)
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          setIsDragging(false)
+          void handleImport(event.dataTransfer.files)
+        }}
+      >
+        {importMessage && <p className="mb-2 px-2 text-xs text-muted" role="status">{importMessage}</p>}
         {files.length === 0 && nodes.length === 0 ? (
-          <p className="px-2 py-4 text-center text-xs text-muted">No files yet</p>
+          <p className="px-2 py-4 text-center text-xs text-muted">Drop Markdown files here or import them above</p>
         ) : (
           nodes.map((node) => <TreeNodeRow key={node.path} node={node} depth={depth} />)
         )}

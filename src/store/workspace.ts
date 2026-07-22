@@ -12,6 +12,7 @@ import {
   resolveDirectory,
 } from '../fs/opfs'
 import { seedWorkspaceIfEmpty, WELCOME_PATH } from '../fs/seed'
+import { importMarkdownFiles } from '../fs/import'
 import { loadMeta, saveMeta } from '../lib/meta'
 import { joinPath, parentPath, uniqueName, baseName } from '../lib/paths'
 
@@ -36,6 +37,7 @@ interface WorkspaceState {
   saveCurrent: () => Promise<void>
   createFile: (parentPath?: string) => Promise<string | null>
   createFolder: (parentPath?: string) => Promise<string | null>
+  importFiles: (files: File[]) => Promise<string[]>
   deleteNode: (path: string) => Promise<void>
   renameNode: (oldPath: string, newName: string) => Promise<void>
   toggleFolder: (path: string) => Promise<void>
@@ -173,6 +175,29 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     await saveMeta({ expandedFolders: [...expanded] })
     await refreshTree()
     return finalPath
+  },
+
+  importFiles: async (files) => {
+    const { activePath, saveStatus, refreshTree, saveCurrent } = get()
+    if (activePath && (saveStatus === 'dirty' || saveStatus === 'saving')) {
+      await saveCurrent()
+    }
+
+    const importedPaths = await importMarkdownFiles(files)
+    if (importedPaths.length === 0) return importedPaths
+
+    await refreshTree()
+    const firstImportedPath = importedPaths[0]
+
+    if (firstImportedPath === activePath) {
+      const content = await readFile(firstImportedPath)
+      await saveMeta({ lastOpenedPath: firstImportedPath })
+      set({ content, saveStatus: 'saved', mobileTab: 'editor' })
+    } else {
+      await get().openFile(firstImportedPath)
+    }
+
+    return importedPaths
   },
 
   deleteNode: async (path: string) => {

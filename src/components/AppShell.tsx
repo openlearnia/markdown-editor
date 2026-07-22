@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react'
 import { Panel, Group, Separator, useDefaultLayout } from 'react-resizable-panels'
 import { useWorkspace } from '../store/workspace'
 import { TopBar } from './TopBar'
@@ -18,6 +19,10 @@ export function AppShell() {
   const previewVisible = useWorkspace((s) => s.previewVisible)
   const mobileTab = useWorkspace((s) => s.mobileTab)
   const setMobileTab = useWorkspace((s) => s.setMobileTab)
+  const editorScrollerRef = useRef<HTMLElement | null>(null)
+  const previewScrollerRef = useRef<HTMLDivElement | null>(null)
+  const isSynchronizingRef = useRef(false)
+  const releaseSyncFrameRef = useRef<number | null>(null)
 
   const hasFiles = flattenFiles(tree).length > 0
 
@@ -30,6 +35,38 @@ export function AppShell() {
     panelIds: [...panelIds],
     storage: localStorage,
   })
+
+  useEffect(() => () => {
+    if (releaseSyncFrameRef.current !== null) {
+      cancelAnimationFrame(releaseSyncFrameRef.current)
+    }
+  }, [])
+
+  const syncScroll = useCallback((from: HTMLElement, to: HTMLElement | null) => {
+    if (isSynchronizingRef.current || !to) return
+
+    const maxFrom = from.scrollHeight - from.clientHeight
+    const maxTo = to.scrollHeight - to.clientHeight
+    if (maxFrom <= 0 || maxTo <= 0) return
+
+    isSynchronizingRef.current = true
+    to.scrollTop = (from.scrollTop / maxFrom) * maxTo
+    if (releaseSyncFrameRef.current !== null) {
+      cancelAnimationFrame(releaseSyncFrameRef.current)
+    }
+    releaseSyncFrameRef.current = requestAnimationFrame(() => {
+      isSynchronizingRef.current = false
+      releaseSyncFrameRef.current = null
+    })
+  }, [])
+
+  const setEditorScroller = useCallback((element: HTMLElement | null) => {
+    editorScrollerRef.current = element
+  }, [])
+
+  const setPreviewScroller = useCallback((element: HTMLDivElement | null) => {
+    previewScrollerRef.current = element
+  }, [])
 
   return (
     <div className="flex h-full flex-col">
@@ -94,7 +131,13 @@ export function AppShell() {
             {!activePath ? (
               <EmptyState />
             ) : (
-              <MarkdownEditor value={content} path={activePath} onChange={setContent} />
+              <MarkdownEditor
+                value={content}
+                path={activePath}
+                onChange={setContent}
+                onScroll={(element) => syncScroll(element, previewScrollerRef.current)}
+                onScrollerReady={setEditorScroller}
+              />
             )}
           </Panel>
           {previewVisible && (
@@ -106,7 +149,13 @@ export function AppShell() {
                     Preview
                   </div>
                   <div className="min-h-0 flex-1">
-                    {activePath ? <MarkdownPreview source={content} /> : null}
+                    {activePath ? (
+                      <MarkdownPreview
+                        source={content}
+                        onScroll={(element) => syncScroll(element, editorScrollerRef.current)}
+                        onScrollerReady={setPreviewScroller}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </Panel>
